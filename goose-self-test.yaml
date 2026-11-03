@@ -13,6 +13,7 @@ activities:
   - Validate declared vision through persisted custom-provider configuration and outbound requests
   - Analyze code structure and parsing capabilities
   - Validate Boa JavaScript discovery, batching, cancellation, and isolation
+  - Validate runtime-loaded JavaScript Operations and persisted effects
   - Test extension discovery and management
   - Test load tool for knowledge injection and discovery
   - Test delegate tool for task delegation
@@ -30,7 +31,7 @@ parameters:
     input_type: string
     requirement: optional
     default: "all"
-    description: "Which test phases to run: all, basic, extensions, delegation, code-mode, declared-vision, reasoning, zai-coding-plan, acp-effort, compaction, context-relevance, advanced"
+    description: "Which test phases to run: all, basic, extensions, delegation, code-mode, js-operations, declared-vision, reasoning, zai-coding-plan, acp-effort, compaction, context-relevance, advanced"
 
   - key: test_depth
     input_type: string
@@ -88,6 +89,23 @@ instructions: |
   - Enable/disable extensions
   - Test extension interactions
   - Verify isolation between extensions
+
+  ### JavaScript Operations
+  When built with js-operations and test_phases is all or js-operations:
+  - Follow crates/goose/examples/js-operations/README.md and configure the example file with GOOSE_JS_OPERATIONS.
+  - In a fresh turn, verify /local-policy returns the example response without inference and its prompt contribution appears in a context preview.
+  - Edit the file and verify the next turn uses the updated source.
+  - Use a run hook that sets an operation note; verify it is persisted under js:<name> and prevents repeated application after reconstruction.
+  - Verify invalid files, duplicate names, and malformed hook results fail with useful errors.
+  - Place a JS Operation before stop_hook and verify it can inspect a completed assistant response before the turn ends.
+  - Verify before/after placement relative to built-ins and other js:<name> Operations, including forward references and configuration order for a shared anchor.
+  - Verify unknown or unavailable anchors, self references, and placement cycles fail setup; plain paths must retain their position before llm.
+  - Replace max_turns with a JS Operation and verify only its hooks contribute; before/after anchors using max_turns or the replacement's js:<name> must resolve to the same slot in config order.
+  - Verify multiple replacements of one built-in, replacement of another JS Operation, and replace: llm fail setup.
+  - Replace slash_command and verify the built-in dispatcher and /status handler are not restored.
+  - Cancel a pending hook and verify finalize_cancellation effects persist once.
+  - Verify js-operations works without code-mode, and code-mode alone does not load Operations.
+  - If the feature is unavailable, record this phase as skipped.
 
   ### Code Mode: Boa Runtime
   When code mode is enabled (or test_phases is code-mode):

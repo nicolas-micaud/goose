@@ -2,7 +2,7 @@
  * Provider smoke tests — code execution mode (JS batching).
  *
  * Each available (non-agentic) provider/model pair gets its own test that
- * spawns `goose run` with the memory + code_execution builtins and validates
+ * spawns `goose run` with the todo + code_execution builtins and validates
  * that the code_execution tool was invoked.
  */
 
@@ -12,7 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { buildGoose, discoverTestCases, runGoose, providerTest } from './test_providers_lib';
 
-const BUILTINS = 'memory,code_execution';
+const BUILTINS = 'todo,code_execution';
 
 let gooseBin: string;
 
@@ -22,12 +22,12 @@ beforeAll(() => {
 
 const { testAll } = providerTest(discoverTestCases({ skipAgentic: true }));
 
-// Matches: "execute_javascript | code_execution", "get_function_details | code_execution",
+// Matches: "execute_javascript | code_execution",
 //           "tool call | execute", "tool calls | execute" (old format)
 //           "▸ execute N tool call" (new format with tool_graph)
 //           "▸ execute_javascript" (plain tool name in output)
 const codeExecPattern =
-  /(execute_javascript \| code_execution)|(get_function_details \| code_execution)|(tool calls? \| execute)|(▸.*execute.*tool call)|(▸ execute_javascript)/;
+  /(execute_javascript \| code_execution)|(tool calls? \| execute)|(▸.*execute.*tool call)|(▸ execute_javascript)/;
 
 testAll('invokes code_execution tool', async (tc, { expect }) => {
   const testdir = fs.mkdtempSync(path.join(os.tmpdir(), 'goose-codeexec-'));
@@ -35,7 +35,7 @@ testAll('invokes code_execution tool', async (tc, { expect }) => {
     const output = await runGoose(
       gooseBin,
       testdir,
-      "Store a memory with category 'test' and data 'hello world', then retrieve all memories from category 'test'.",
+      'Use the code_execution execute_javascript tool to run this JavaScript: async function run() { return await tools.call("todo__todo_write", { content: "hello world" }); }',
       BUILTINS,
       { GOOSE_PROVIDER: tc.provider, GOOSE_MODEL: tc.model },
       55_000,
